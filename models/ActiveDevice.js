@@ -6,6 +6,7 @@ const ActiveDeviceSchema = new mongoose.Schema({
   ipAddress: { type: String, required: true },
   loginTimestamp: { type: Date, default: Date.now },
   token: { type: String, required: true },
+  isValid: { type: Boolean, default: true }, // Add this line
 });
 
 module.exports = mongoose.model("ActiveDevice", ActiveDeviceSchema);

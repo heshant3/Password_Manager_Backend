@@ -4,6 +4,7 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const accountRoutes = require("./routes/account");
+const nodemailer = require("nodemailer"); // Add this line
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -21,9 +22,18 @@ mongoose
   .then(() => console.log("MongoDB Connected"))
   .catch((err) => console.error("MongoDB Connection Error:", err));
 
+// Nodemailer configuration
+const transporter = nodemailer.createTransport({
+  service: process.env.EMAIL_SERVICE,
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS,
+  },
+});
+
 // Routes
-app.use("/api/auth", authRoutes);
-app.use("/api/account", accountRoutes); // Ensure this line is present
+app.use("/api/auth", authRoutes); // Ensure this line is present and correct
+app.use("/api/account", accountRoutes);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
