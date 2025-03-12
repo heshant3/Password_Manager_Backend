@@ -1,4 +1,3 @@
-"use client";
 import React, { useState, useEffect } from "react";
 import { FaLaptop, FaUser } from "react-icons/fa";
 import styles from "./Profile.module.css";

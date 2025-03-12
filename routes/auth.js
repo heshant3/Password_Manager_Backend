@@ -47,6 +47,23 @@ router.post("/register", async (req, res) => {
     });
 
     await user.save();
+
+    // Send email notification
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Account Registration",
+      text: "Your account has been registered successfully.",
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+      } else {
+        console.log("Email sent:", info.response);
+      }
+    });
+
     res.status(201).json({ message: "User registered successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -338,6 +355,22 @@ router.put("/user/:userId/change-password", async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     user.password = hashedPassword;
     await user.save();
+
+    // Send email notification
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Password Updated",
+      text: "Your password has been updated successfully.",
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+      } else {
+        console.log("Email sent:", info.response);
+      }
+    });
 
     res
       .status(200)
