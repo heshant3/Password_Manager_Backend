@@ -4,7 +4,8 @@ const mongoose = require("mongoose");
 const cors = require("cors");
 const authRoutes = require("./routes/auth");
 const accountRoutes = require("./routes/account");
-const nodemailer = require("nodemailer"); // Add this line
+const nodemailer = require("nodemailer");
+const OTP = require("./models/OTP"); // Add this line
 
 const app = express();
 const PORT = process.env.PORT || 5000;

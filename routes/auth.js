@@ -6,6 +6,7 @@ const useragent = require("useragent"); // Add this line
 const nodemailer = require("nodemailer"); // Add this line
 const User = require("../models/User");
 const ActiveDevice = require("../models/ActiveDevice"); // Add this line
+const OTP = require("../models/OTP"); // Add this line
 require("dotenv").config();
 
 const router = express.Router();
@@ -85,9 +86,47 @@ router.post("/login", async (req, res) => {
       return res.status(400).json({ message: "Invalid email or password" });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
-      expiresIn: "1h",
+    // Generate OTP
+    const otpCode = Math.floor(1000 + Math.random() * 9000).toString();
+    const otp = new OTP({ userId: user._id, code: otpCode });
+    await otp.save();
+
+    // Send OTP email
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: user.email,
+      subject: "Your OTP Code",
+      text: `Your OTP code is ${otpCode}`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.error("Error sending email:", error);
+      } else {
+        console.log("Email sent:", info.response);
+      }
     });
+
+    res.status(200).json({ message: "OTP sent to email" });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// Verify OTP Route
+router.post("/verify-otp", async (req, res) => {
+  const { email, otpCode } = req.body;
+
+  try {
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ message: "Invalid email or OTP" });
+    }
+
+    const otp = await OTP.findOne({ userId: user._id, code: otpCode });
+    if (!otp) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
 
     // Get IP address and device information
     const ipAddress = requestIp.getClientIp(req);
@@ -95,6 +134,9 @@ router.post("/login", async (req, res) => {
     const deviceName = `${agent.os} - ${agent.device.family}`;
 
     // Create ActiveDevice entry
+    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
     const activeDevice = new ActiveDevice({
       userId: user._id,
       deviceName,
@@ -328,9 +370,9 @@ router.get("/check-token/:token", async (req, res) => {
     const activeDevice = await ActiveDevice.findOne({ token });
     if (!activeDevice || !activeDevice.isValid) {
       return res.status(401).json({ message: "false" });
+    } else {
+      res.status(200).json({ message: "true" });
     }
-
-    res.status(200).json({ message: "true" });
   } catch (err) {
     res.status(500).json({ error: err.message }); // Fix this line
   }
@@ -372,9 +414,7 @@ router.put("/user/:userId/change-password", async (req, res) => {
       }
     });
 
-    res
-      .status(200)
-      .json({ success: true, message: "Password changed successfully" });
+    res.status(200).json({ message: "Password changed successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
