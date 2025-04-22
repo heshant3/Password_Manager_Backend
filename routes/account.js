@@ -1,6 +1,6 @@
 const express = require("express");
 const Account = require("../models/Account");
-const CryptoJS = require("crypto-js"); // Add this line
+const CryptoJS = require("crypto-js"); // Add this line AES
 
 const router = express.Router();
 
