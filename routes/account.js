@@ -1,5 +1,6 @@
 const express = require("express");
 const Account = require("../models/Account");
+const CryptoJS = require("crypto-js"); // Add this line
 
 const router = express.Router();
 
@@ -157,6 +158,22 @@ router.delete("/delete/:accountId", async (req, res) => {
     res.status(200).json({ message: "Account deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
+  }
+});
+
+// Decrypt Password Route
+router.post("/decrypt-password", async (req, res) => {
+  const { encryptedPassword } = req.body;
+
+  try {
+    const decryptedPassword = CryptoJS.AES.decrypt(
+      encryptedPassword,
+      process.env.JWT_SECRET
+    ).toString(CryptoJS.enc.Utf8);
+
+    res.status(200).json({ password: decryptedPassword });
+  } catch (err) {
+    res.status(500).json({ error: "Failed to decrypt password" });
   }
 });
 

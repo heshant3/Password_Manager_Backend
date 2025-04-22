@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const CryptoJS = require("crypto-js"); // Add this line
 
 const AccountSchema = new mongoose.Schema({
   accountType: { type: String, required: true },
@@ -8,11 +9,22 @@ const AccountSchema = new mongoose.Schema({
   lastModified: { type: Date, default: Date.now },
 });
 
-// Remove the password hashing middleware
-// AccountSchema.pre("save", async function (next) {
-//   if (!this.isModified("password")) return next();
-//   this.password = await bcrypt.hash(this.password, 10);
-//   next();
-// });
+// Middleware to encrypt the password before saving
+AccountSchema.pre("save", function (next) {
+  if (!this.isModified("password")) return next();
+
+  this.password = CryptoJS.AES.encrypt(
+    this.password,
+    process.env.JWT_SECRET
+  ).toString();
+  next();
+});
+
+// Method to decrypt the password
+AccountSchema.methods.decryptPassword = function () {
+  return CryptoJS.AES.decrypt(this.password, process.env.JWT_SECRET).toString(
+    CryptoJS.enc.Utf8
+  );
+};
 
 module.exports = mongoose.model("Account", AccountSchema);
